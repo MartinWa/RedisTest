@@ -33,7 +33,7 @@
         var start = new Date().getTime();
         $.getJSON(uri + '/' + id)
             .done(function (data) {
-                $('#data' + id).text(data);
+                $('#data' + id).text(JSON.stringify(data));
             })
             .fail(function (jqXhr, textStatus, err) {
                 $('#data' + id).text('Error: ' + err);
