@@ -2,46 +2,66 @@
     ViewBag.Title = "Home Page";
 }
 
+<style>
+    .wrap {
+        word-wrap: break-word;
+        white-space: normal;
+    }
+
+    #nodeid {
+        width: 30px;
+    }
+</style>
 <div class="jumbotron">
     <h1>Redis Test</h1>
     <p class="lead">Press the buttons to get data. First time the cache is empty.</p>
-    <a class="btn btn-default" onclick="get(0)">Clear cache</a>
 </div>
 
 <div class="row">
     <div class="col-md-4">
-        <a class="btn btn-default" onclick="get(1)">Get data 1</a>
+        <a class="btn btn-default" onclick="get(1,1)">Get node</a>
+        <input id="nodeid" type="text" class="form-horizontal">
         <span id="time1"></span>
-        <p><span id="data1"></span></p>
+        <div class="wrap" id="data1"></div>
     </div>
     <div class="col-md-4">
-        <a class="btn btn-default" onclick="get(2)">Get data 2</a>
+        <a class="btn btn-default" onclick="get(2,0)">Get all nodes</a>
         <span id="time2"></span>
-        <p><span id="data2"></span></p>
+        <div class="wrap" id="data2"></div>
     </div>
     <div class="col-md-4">
-        <a class="btn btn-default" onclick="get(3)">Get data 3</a>
+        <a class="btn btn-default" onclick="get(3,-1)">Delete all</a>
         <span id="time3"></span>
-        <p><span id="data3"></span></p>
+        <div class="wrap" id="data3"></div>
     </div>
 </div>
 
 <script>
-    var uri = 'api/data';
+    var baseuri = 'api/data';
 
-    function get(id) {
+    function get(elementId, dataId) {
+        var uri;
+        if (dataId == 0) {
+            uri = baseuri;
+        }
+        else if (dataId == -1) {
+            uri = baseuri + '/' + 10;
+        }
+        else {
+            uri = baseuri + '/' + $('#nodeid').val();
+        }
         var start = new Date().getTime();
-        $.getJSON(uri + '/' + id)
+        $.getJSON(uri)
             .done(function (data) {
-                $('#data' + id).text(JSON.stringify(data));
+                $('#data' + elementId).text(JSON.stringify(data, undefined, 2));
             })
             .fail(function (jqXhr, textStatus, err) {
-                $('#data' + id).text('Error: ' + err);
+                $('#data' + elementId).text('Error: ' + err);
             })
             .always(function () {
                 var end = new Date().getTime();
                 var time = end - start;
-                $('#time' + id).text('Time: ' + time);
+                $('#time' + elementId).text('Time: ' + time);
             });
     }
-</script>
+</script>,

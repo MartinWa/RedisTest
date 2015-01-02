@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Web.Http;
 using Newtonsoft.Json;
@@ -10,31 +11,30 @@ namespace RedisTest.Controllers
     public class DataController : ApiController
     {
         static readonly ConnectionMultiplexer Redis = ConnectionMultiplexer.Connect("");
+        private const string RedisKeyForNode = "data with key {0}";
 
         public IHttpActionResult Get()
         {
             var redisdb = Redis.GetDatabase();
-            for (var i = 0; i < 10; i++)
-            {
-                redisdb.KeyDelete(string.Format("data with key {0}", i));
-            }
-            return Ok();
+            var redisValues = redisdb.StringGet(GetAllKeys());
+            var result = redisValues.Select(redisValue => redisValue.IsNullOrEmpty ? null : JsonConvert.DeserializeObject<ContentDto>(redisValue));
+            return Ok(result);
         }
 
         public IHttpActionResult Get(int id)
         {
-            if (id == 0)
-            {
-                return Get();
-            }
             ContentDto result;
             var redisdb = Redis.GetDatabase();
-            var resultString = redisdb.StringGet(string.Format("data with key {0}", id));
+            if (id >= 10) // Make it easy to delete so I do not have to impliment delete in frontend
+            {
+                return Delete();
+            }
+            var resultString = redisdb.StringGet(string.Format(RedisKeyForNode, id));
             if (resultString.IsNullOrEmpty)
             {
-                result = GetValueFromDataSource(id);
+                result = GetValueFromSlowDataSource(id);
                 resultString = JsonConvert.SerializeObject(result);
-                redisdb.StringSet(string.Format("data with key {0}", id), resultString);
+                redisdb.StringSet(string.Format(RedisKeyForNode, id), resultString);
             }
             else
             {
@@ -43,7 +43,25 @@ namespace RedisTest.Controllers
             return Ok(result);
         }
 
-        private static ContentDto GetValueFromDataSource(int id)
+        public IHttpActionResult Delete()
+        {
+            Redis.GetDatabase().KeyDelete(GetAllKeys());
+            return Ok("Deleted");
+        }
+
+        private static RedisKey[] GetAllKeys()
+        {
+            const int length = 10;
+            var redisKeys = new RedisKey[length];
+            var keys = redisKeys;
+            for (var i = 0; i < length; i++)
+            {
+                keys[i] = (string.Format(RedisKeyForNode, i));
+            }
+            return keys;
+        }
+
+        private static ContentDto GetValueFromSlowDataSource(int id)
         {
             Thread.Sleep(1 * 1000);
             return new ContentDto
