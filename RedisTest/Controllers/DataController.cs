@@ -17,11 +17,9 @@ namespace RedisTest.Controllers
             for (var i = 0; i < 10; i++)
             {
                 redisdb.KeyDelete(string.Format("data with key {0}", i));
-
             }
             return Ok();
         }
-
 
         public IHttpActionResult Get(int id)
         {
@@ -36,7 +34,7 @@ namespace RedisTest.Controllers
             {
                 result = GetValueFromDataSource(id);
                 resultString = JsonConvert.SerializeObject(result);
-                redisdb.StringSet(string.Format("data with key {0}", id), resultString, TimeSpan.FromSeconds(20));
+                redisdb.StringSet(string.Format("data with key {0}", id), resultString);
             }
             else
             {
@@ -54,6 +52,7 @@ namespace RedisTest.Controllers
                 CreatedDate = DateTime.UtcNow,
                 OwnerPortalId = 23,
                 BasedOnId = 34,
+                Type = ContentType.Link,
                 Translations = new List<TranslationDto>
                 {
                     new TranslationDto
@@ -61,32 +60,41 @@ namespace RedisTest.Controllers
                         CreatedDate = DateTime.UtcNow,
                         Id = id,
                         Name = "Name",
-                        PublishState = PublishState.Aa,
+                        PublishState = PublishState.Cc,
                         UpdatedDate = null
                     }
-                },
-                Type = ContentType.Folder
+                }
             };
         }
     }
 
+    // ReSharper disable UnusedAutoPropertyAccessor.Global
     public class ContentDto
     {
+        [JsonProperty]
         public int ContentId { get; internal set; }
+        [JsonProperty]
         public DateTime CreatedDate { get; internal set; }
+        [JsonProperty]
         public int OwnerPortalId { get; internal set; }
+        [JsonProperty]
         public int BasedOnId { get; internal set; }
-        public List<TranslationDto> Translations { get; internal set; }
+        [JsonProperty]
+        public ICollection<TranslationDto> Translations { get; internal set; }
+        [JsonProperty]
         public ContentType Type { get; internal set; }
     }
     public class TranslationDto
     {
+        [JsonProperty]
         public int Id { get; internal set; }
         public string Name { get; set; }
+        [JsonProperty]
         public DateTime CreatedDate { get; internal set; }
         public DateTime? UpdatedDate { get; set; }
         public PublishState PublishState { get; set; }
     }
+    // ReSharper restore UnusedAutoPropertyAccessor.Global
     public enum ContentType
     {
         Folder,
